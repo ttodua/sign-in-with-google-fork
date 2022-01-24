@@ -52,10 +52,13 @@ class Sign_In_With_Google_WPCLI {
 	 *     https://www.example.com/my-custom-post?logmein // Log the user in and redirect to my-custom-post
 	 * ---
 	 *
+
+	 * [--google_email_sanitization=<1|0>]
+	 * : Sanitize emails to unique google account, to avoid duplicate/spammy aliases of gmail.
+	 *
 	 * [--show_unlink_in_profile=<1|0>]
 	 * : Show the Unlink button for users in their profile
-	 *
-	 * [--show_on_login=<1|0>]
+	 *	 * [--show_on_login=<1|0>]
 	 * : Show the "Sign In With Google" button on the login form.
 	 *
 	 * [--disable_login_page=<1|0>]
@@ -153,11 +156,25 @@ class Sign_In_With_Google_WPCLI {
 	}
 
 	/**
+	 * Handles updating siwg_google_email_sanitization in the options table.
+	 *
+	 * @param string $show Email sanitization option
+	 */
+	private function update_google_email_sanitization( $show = 0 ) {
+		$result = update_option( 'siwg_google_email_sanitization', boolval( $show ) );
+
+		if ( ! $result ) {
+			WP_CLI::warning( 'Skipping option - Setting already matches' );
+		}
+
+	}
+
+	/**
 	 * Handles updating siwg_google_domain_restriction in the options table.
 	 *
 	 * @param string $domains The string of domains to verify and use.
 	 */
-	private function update_domains( $domains = '' ) {
+	private function update_domains( $param = true ) {
 
 		if ( ! Sign_In_With_Google_Utility::verify_domain_list( $domains ) ) {
 			WP_CLI::error( 'Please use a valid list of domains' );

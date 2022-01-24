@@ -259,6 +259,14 @@ class Sign_In_With_Google_Admin {
 			'siwg_section'
 		);
 
+		add_settings_field(
+			'siwg_password_length',
+			__( 'Default registration password length', 'sign-in-with-google' ),
+			array( $this, 'siwg_password_length' ),
+			'siwg_settings',
+			'siwg_section'
+		);
+
 		register_setting( 'siwg_settings', 'siwg_google_client_id', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_client_secret', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_user_default_role' );
@@ -268,8 +276,8 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_show_unlink_in_profile' );
 		register_setting( 'siwg_settings', 'siwg_custom_login_param', array( $this, 'custom_login_input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
-		register_setting( 'siwg_settings', 'siwg_disable_login_page' );
-	}
+		register_setting( 'siwg_settings', 'siwg_password_length' );
+		register_setting( 'siwg_settings', 'siwg_disable_login_page' );	}
 
 	/**
 	 * Settings section callback function.
@@ -409,14 +417,21 @@ class Sign_In_With_Google_Admin {
 	}
 
 	/**
+	 * Callback function for Default password length
+	 *
+	 * @since    1.0.0
+	 */
+	public function siwg_password_length() {
+		echo '<input name="siwg_password_length" id="siwg_password_length" type="number" value="' . get_option( 'siwg_password_length', 12 ) . '"/>';
+	}
+
+	/**
 	 * Callback function for Show Google Signup Button on Login Form
 	 *
 	 * @since    1.0.0
 	 */
 	public function siwg_disable_login_page() {
-
 		echo '<input type="checkbox" name="siwg_disable_login_page" id="siwg_disable_login_page" value="1" ' . checked( get_option( 'siwg_disable_login_page' ), true, false ) . ' />';
-
 	}
 
 	/**
@@ -668,7 +683,6 @@ class Sign_In_With_Google_Admin {
 			'siwg_show_unlink_in_profile'         => get_option( 'siwg_show_unlink_in_profile' ),
 			'siwg_custom_login_param'             => get_option( 'siwg_custom_login_param' ),
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
-			'siwg_disable_login_page'             => get_option( 'siwg_disable_login_page' ),
 		);
 
 		ignore_user_abort( true );
@@ -842,7 +856,7 @@ class Sign_In_With_Google_Admin {
 			return $user;
 		}
 
-		$user_pass    = wp_generate_password( 12 );
+		$user_pass    = wp_generate_password( get_option( 'siwg_password_length', 12 ) );
 		$user_email   = $user_data->email;
 		$first_name   = $user_data->given_name;
 		$last_name    = $user_data->family_name;

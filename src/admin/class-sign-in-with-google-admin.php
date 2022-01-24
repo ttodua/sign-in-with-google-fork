@@ -268,13 +268,19 @@ class Sign_In_With_Google_Admin {
 		);
 
 		add_settings_field(
+			'siwg_allow_mail_change',
+			__( 'Allow regular user to change own email', 'sign-in-with-google' ),
+			array( $this, 'siwg_allow_mail_change' ),
+			'siwg_settings',
+			'siwg_section'
+		);
+		add_settings_field(
 			'siwg_password_length',
 			__( 'Default registration password length', 'sign-in-with-google' ),
 			array( $this, 'siwg_password_length' ),
 			'siwg_settings',
 			'siwg_section'
 		);
-
 		register_setting( 'siwg_settings', 'siwg_google_client_id', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_client_secret', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_user_default_role' );
@@ -285,7 +291,7 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_show_unlink_in_profile' );
 		register_setting( 'siwg_settings', 'siwg_custom_login_param', array( $this, 'custom_login_input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
-		register_setting( 'siwg_settings', 'siwg_password_length' );
+		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
 		register_setting( 'siwg_settings', 'siwg_disable_login_page' );	}
 
 	/**
@@ -441,6 +447,18 @@ class Sign_In_With_Google_Admin {
 	}
 
 	/**
+
+	 * Callback function for Allow user to change own email
+	 *
+	 * @since    1.0.0
+	 */
+	public function siwg_allow_mail_change() {
+
+		echo '<input type="checkbox" name="siwg_allow_mail_change" id="siwg_allow_mail_change" value="1" ' . checked( get_option( 'siwg_allow_mail_change' ), true, false ) . ' />';
+
+	}
+
+	 /**
 	 * Callback function for Default password length
 	 *
 	 * @since    1.0.0
@@ -708,6 +726,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_show_unlink_in_profile'         => get_option( 'siwg_show_unlink_in_profile' ),
 			'siwg_custom_login_param'             => get_option( 'siwg_custom_login_param' ),
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
+			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
 		);
 
 		ignore_user_abort( true );
@@ -977,6 +996,7 @@ class Sign_In_With_Google_Admin {
 			exit;
 		}
 	}
+
 		
 	/**
 	 * Disable Login page & redirect directly to google login
@@ -992,4 +1012,36 @@ class Sign_In_With_Google_Admin {
 				$this->google_auth_redirect();
 		}
 	}
+
+
+	
+	/**
+	 * Disable User email modifications
+	 *    https://wordpress.stackexchange.com/a/363376/33667
+	 * @since 1.3.1
+	 */
+	public function disallow_email_changes()
+	{
+		if ( ! current_user_can( 'manage_options' ) && ! get_option('siwg_allow_mail_change') ) 
+		{
+			add_action( 'personal_options_update',  
+				function ($user_id) {
+					if ( !current_user_can( 'manage_options' ) ) { 
+						$user = get_user_by('id', $user_id ); 
+						$_POST['email'] = $user->user_email; // reset back to original, so user can't modify
+					}
+				}, 
+				5
+			);
+
+			add_action( 'show_user_profile',
+				function ($user) {
+					if ( !current_user_can( 'manage_options' ) ) { 
+						?><script>document.getElementById("email").setAttribute("disabled", "disabled");</script> <?php 
+					} 
+				}
+			); 
+		}
+	}
+
 }

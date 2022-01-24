@@ -61,10 +61,12 @@ class Sign_In_With_Google_WPCLI {
 	 *	 * [--show_on_login=<1|0>]
 	 * : Show the "Sign In With Google" button on the login form.
 	 *
-	 * [--disable_login_page=<1|0>]
+
+	 * [--allow_mail_change=<1|0>]
+	 * : Allow regular users to change their emails by themselves.
+	 *	 * [--disable_login_page=<1|0>]
 	 * : Disable native WP login page at all and redirect users directly to Google Sign-In
-	 *
-	 * ## EXAMPLES
+	 *	 * ## EXAMPLES
 	 *
 	 *     wp siwg settings --client_id=XXXXXX.apps.googleusercontent.com
 	 *
@@ -224,6 +226,19 @@ class Sign_In_With_Google_WPCLI {
 
 		if ( ! $result ) {
 			WP_CLI::warning( 'Skipping Show On Login - Setting already matches' );
+		}
+	}
+
+	/**
+	 * Handles updating siwg_show_on_login.
+	 *
+	 * @param bool $allow Allow regular user to change own email.
+	 */
+	private function update_allow_mail_change( $allow = 0 ) {
+		$result = update_option( 'siwg_allow_mail_change', boolval( $allow ) );
+
+		if ( ! $result ) {
+			WP_CLI::warning( 'Skipping option - Setting already matches' );
 		}
 	}
 

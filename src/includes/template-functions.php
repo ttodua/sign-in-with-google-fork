@@ -14,8 +14,7 @@
  * @return void
  */
 function siwg_get_instance() {
-	$siwg_instance = apply_filters('siwg_instance', null);
-	return $siwg_instance;
+	return apply_filters( 'siwg_instance', null );
 }
 
 /**

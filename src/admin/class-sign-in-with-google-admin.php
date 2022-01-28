@@ -815,16 +815,18 @@ class Sign_In_With_Google_Admin {
 		$redirect_url = site_url( '?' . apply_filters( 'siwg_google_response_slug', 'google_response' ) );
 		$args = array(
 			'body' => array(
-				'code'          => $code,
+				'code'          => urlencode($code),
 				'client_id'     => get_option( 'siwg_google_client_id' ),
 				'client_secret' => get_option( 'siwg_google_client_secret' ),
-				'redirect_uri'  => site_url( '?' . apply_filters( 'sigw_google_response_slug', 'google_response' ) ),				'grant_type'    => 'authorization_code',
+				'redirect_uri'  => site_url( '?' . apply_filters( 'sigw_google_response_slug', 'google_response' ) ),				
+				'grant_type'    => 'authorization_code',
 			),
 		);
+		v( $args );
 		$response = wp_remote_post( 'https://www.googleapis.com/oauth2/v4/token', $args );
-		vx( wp_retrieve_body( $response ) );
+		vx( $response['body'] );
 
-		$body = json_decode( wp_retrieve_body( $response ) );
+		$body = json_decode( wp_remote_retrieve_body( $response ) );
 		if ( '' !== $body->access_token ) {
 			$this->access_token = $body->access_token;
 			return $this->access_token;
@@ -917,17 +919,11 @@ class Sign_In_With_Google_Admin {
 			exit;
 		}
 	
-		if ( false !== $user ) {
-			// allow explicit hooks to take action
-			$filter_result = apply_filters ('siwg_user_found_on_login', null);
-			if ( $filter_result ) {
-				return $filter_result;
-			}
-			else {
-				update_user_meta( $user->ID, 'first_name', $user_data->given_name );
-				update_user_meta( $user->ID, 'last_name', $user_data->family_name );
-				return $user;
-			}		}
+		if ( false !== $user ) { 
+			update_user_meta( $user->ID, 'first_name', $user_data->given_name );
+			update_user_meta( $user->ID, 'last_name', $user_data->family_name );
+			return $user; 
+		}
 
 		$user_pass    = wp_generate_password( get_option( 'siwg_password_length', 12 ) );
 		$user_email   = $user_data->email;
@@ -954,6 +950,7 @@ class Sign_In_With_Google_Admin {
 		);
 		$user = apply_filters ('siwg_pre_insert_user', $user, $user_data);
 		$new_user = wp_insert_user( $user );
+		do_action ('siwg_after_new_user_insert', $new_user );
 
 		if ( is_wp_error( $new_user ) ) {
 			do_action ('siwg_new_user_creation_error', $new_user );
@@ -1007,7 +1004,7 @@ class Sign_In_With_Google_Admin {
 
 		$result = wp_remote_request( 'https://www.googleapis.com/userinfo/v2/me', $args );
 
-		return json_decode( wp_retrieve_body( $result ) );
+		return json_decode( wp_remote_retrieve_body( $result ) );
 	}
 
 	/**

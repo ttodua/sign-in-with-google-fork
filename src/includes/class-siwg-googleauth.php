@@ -62,7 +62,8 @@ class SIWG_GoogleAuth {
 		$this->scopes = urlencode( implode( ' ', $scopes ) );
 
 		$response_slug = apply_filters( 'sigw_google_response_slug', 'google_response' );
-		$this->redirect_uri = apply_filters( 'siwg_redirect_uri', site_url( '?' . $response_slug ) ) ;	}
+		$this->redirect_uri = apply_filters( 'siwg_redirect_uri', site_url( '?' . $response_slug ) ) ;
+	}
 
 	/**
 	 * Get the URL for sending user to Google for authentication.
@@ -87,7 +88,6 @@ class SIWG_GoogleAuth {
 
 		$redirect_uri  = urlencode( $this->redirect_uri );
 		$encoded_state = base64_encode( json_encode( $state ) );
-
 		return $this->base_url . '?scope=' . $scopes . '&redirect_uri=' . $redirect_uri . '&response_type=code&client_id=' . $this->client_id . '&state=' . $encoded_state . '&prompt=select_account';
 	}
 }

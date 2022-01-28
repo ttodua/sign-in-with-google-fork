@@ -812,14 +812,13 @@ class Sign_In_With_Google_Admin {
 
 		// Sanitize auth code.
 		$code = sanitize_text_field( $code );
-
+		$redirect_url = site_url( '?' . apply_filters( 'siwg_google_response_slug', 'google_response' ) );
 		$args = array(
 			'body' => array(
 				'code'          => $code,
 				'client_id'     => get_option( 'siwg_google_client_id' ),
 				'client_secret' => get_option( 'siwg_google_client_secret' ),
-				'redirect_uri'  => site_url( '?' . apply_filters( 'sigw_google_response_slug', 'google_response' ) ),
-				'grant_type'    => 'authorization_code',
+				'redirect_uri'  => site_url( '?' . apply_filters( 'sigw_google_response_slug', 'google_response' ) ),				'grant_type'    => 'authorization_code',
 			),
 		);
 		$response = wp_remote_post( 'https://www.googleapis.com/oauth2/v4/token', $args );

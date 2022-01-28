@@ -813,20 +813,19 @@ class Sign_In_With_Google_Admin {
 		// Sanitize auth code.
 		$code = sanitize_text_field( $code );
 		$redirect_url = site_url( '?' . apply_filters( 'siwg_google_response_slug', 'google_response' ) );
+
 		$args = array(
 			'body' => array(
-				'code'          => urlencode($code),
+				'code'          => $code,
 				'client_id'     => get_option( 'siwg_google_client_id' ),
 				'client_secret' => get_option( 'siwg_google_client_secret' ),
-				'redirect_uri'  => site_url( '?' . apply_filters( 'sigw_google_response_slug', 'google_response' ) ),				
+				'redirect_uri'  => apply_filters( 'siwg_google_redirect_uri', $redirect_url ),	
 				'grant_type'    => 'authorization_code',
 			),
 		);
-		v( $args );
-		v( $args );
-		$response = wp_remote_post( 'https://www.googleapis.com/oauth2/v4/token', $args );
-		vx( $response['body'] );
 
+		$response = wp_remote_post( 'https://www.googleapis.com/oauth2/v4/token', $args );
+		
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
 		if ( '' !== $body->access_token ) {
 			$this->access_token = $body->access_token;

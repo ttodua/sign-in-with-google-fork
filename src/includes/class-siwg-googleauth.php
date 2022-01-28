@@ -62,7 +62,7 @@ class SIWG_GoogleAuth {
 		$this->scopes = urlencode( implode( ' ', $scopes ) );
 
 		$response_slug = apply_filters( 'sigw_google_response_slug', 'google_response' );
-		$this->redirect_uri = apply_filters( 'siwg_redirect_uri', site_url( '?' . $response_slug ) ) ;
+		$this->redirect_uri = apply_filters( 'siwg_google_redirect_uri', site_url( '?' . $response_slug ) ) ;
 	}
 
 	/**

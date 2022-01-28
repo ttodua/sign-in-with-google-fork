@@ -34,4 +34,3 @@ function siwg_get_button() {
 function siwg_get_google_auth_url( $state = [] ) {
 	$google_auth = new SIWG_GoogleAuth( get_option( 'siwg_google_client_id' ) );
 	return $google_auth->get_google_auth_url( $state );
-}

@@ -822,10 +822,10 @@ class Sign_In_With_Google_Admin {
 				'grant_type'    => 'authorization_code',
 			),
 		);
-
 		$response = wp_remote_post( 'https://www.googleapis.com/oauth2/v4/token', $args );
+		vx($response);
 
-		$body = json_decode( $response['body'] );
+		$body = wp_retrieve_body( $response );
 
 		if ( '' !== $body->access_token ) {
 			$this->access_token = $body->access_token;

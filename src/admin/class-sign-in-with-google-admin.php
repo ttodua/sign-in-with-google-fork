@@ -625,7 +625,6 @@ class Sign_In_With_Google_Admin {
 	 * @since 1.0.0
 	 */
 	public function authenticate_user() {
-
 		$params = apply_filters ('sigw_authenticate_user_params', null);
 		if ( $params === null ){
 			$params = [];
@@ -636,7 +635,7 @@ class Sign_In_With_Google_Admin {
 		$this->set_access_token( $params['code'] );
 
 		$this->set_user_info();
-
+vx($this->user);
 		// If the user is logged in, just connect the authenticated Google account.
 		if ( is_user_logged_in() ) {
 			// link the account.

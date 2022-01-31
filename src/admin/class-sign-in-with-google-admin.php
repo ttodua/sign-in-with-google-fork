@@ -660,7 +660,6 @@ class Sign_In_With_Google_Admin {
 		$this->set_access_token( $params['code'] );
 
 		$this->set_user_info();
-vx($this->user);
 		// If the user is logged in, just connect the authenticated Google account.
 		if ( is_user_logged_in() ) {
 			// link the account.

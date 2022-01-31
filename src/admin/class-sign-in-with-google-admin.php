@@ -220,9 +220,6 @@ class Sign_In_With_Google_Admin {
 		);
 
 		add_settings_field(
-
-
-
 			'siwg_save_google_userinfo',
 			__( 'Save user info received from Google', 'sign-in-with-google' ),
 			array( $this, 'siwg_save_google_userinfo' ),
@@ -238,9 +235,6 @@ class Sign_In_With_Google_Admin {
 		);
 
 		add_settings_field(
-
-
-
 			'siwg_google_email_sanitization',
 			__( 'Sanitize email addresses', 'sign-in-with-google' ),
 			array( $this, 'siwg_google_email_sanitization' ),
@@ -306,7 +300,7 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_custom_login_param', array( $this, 'custom_login_input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
 		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
-		register_setting( 'siwg_settings', 'siwg_disable_login_page' );	}
+		register_setting( 'siwg_settings', 'siwg_disable_login_page' );
 	}
 
 	/**

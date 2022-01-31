@@ -176,10 +176,13 @@ class Sign_In_With_Google {
 		$plugin_admin = new Sign_In_With_Google_Admin( $this->get_plugin_name(), $this->get_version() );		
 		// for extend
 		add_filter( 'siwg_admin_instance', function() use ($plugin_admin) { return $plugin_admin; } );
-
-		$this->loader->add_action( 'admin_init', $plugin_admin, 'process_settings_import' );		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
+	$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'disallow_email_changes' );
-		$this->loader->add_action( 'show_user_profile', $plugin_admin, 'add_connect_button_to_profile' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'settings_api_init' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'settings_menu_init' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'process_settings_export' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'process_settings_import' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );		$this->loader->add_action( 'show_user_profile', $plugin_admin, 'add_connect_button_to_profile' );
 		$this->loader->add_action( 'login_init', $plugin_admin, 'check_login_redirection', 888 );
 
 		if ( isset( $_POST['_siwg_account_nonce'] ) ) {

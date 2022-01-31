@@ -220,17 +220,30 @@ class Sign_In_With_Google_Admin {
 		);
 
 		add_settings_field(
-			'siwg_google_email_sanitization',
-			__( 'Sanitize email addresses', 'sign-in-with-google' ),
-			array( $this, 'siwg_google_email_sanitization' ),
+
+
+
+			'siwg_save_google_userinfo',
+			__( 'Save user info received from Google', 'sign-in-with-google' ),
+			array( $this, 'siwg_save_google_userinfo' ),
+			'siwg_settings',
+			'siwg_section'
+		);
+
+		add_settings_field( 			'siwg_allow_domain_user_registration',
+			__( 'Allow domain user registrations', 'sign-in-with-google' ),
+			array( $this, 'siwg_allow_domain_user_registration' ),
 			'siwg_settings',
 			'siwg_section'
 		);
 
 		add_settings_field(
-			'siwg_allow_domain_user_registration',
-			__( 'Allow domain user registrations', 'sign-in-with-google' ),
-			array( $this, 'siwg_allow_domain_user_registration' ),
+
+
+
+			'siwg_google_email_sanitization',
+			__( 'Sanitize email addresses', 'sign-in-with-google' ),
+			array( $this, 'siwg_google_email_sanitization' ),
 			'siwg_settings',
 			'siwg_section'
 		);
@@ -287,12 +300,14 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_use_google_profile_picture' );
 		register_setting( 'siwg_settings', 'siwg_google_domain_restriction', array( $this, 'domain_input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_email_sanitization' );
+		register_setting( 'siwg_settings', 'siwg_save_google_userinfo' );
 		register_setting( 'siwg_settings', 'siwg_allow_domain_user_registration' );
 		register_setting( 'siwg_settings', 'siwg_show_unlink_in_profile' );
 		register_setting( 'siwg_settings', 'siwg_custom_login_param', array( $this, 'custom_login_input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
 		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
 		register_setting( 'siwg_settings', 'siwg_disable_login_page' );	}
+	}
 
 	/**
 	 * Settings section callback function.
@@ -412,6 +427,7 @@ class Sign_In_With_Google_Admin {
 	}
 
 	/**
+
 	 * Callback function for Show Unlink Button in user's profile page
 	 *
 	 * @since    [NEXT]
@@ -423,6 +439,21 @@ class Sign_In_With_Google_Admin {
 			'siwg_show_unlink_in_profile',
 			checked( get_option( 'siwg_show_unlink_in_profile' ), true, false ),
 			__( 'Allow users to unlink their account from google (when you do not want users could control themselves, you should uncheck this option).', 'sign-in-with-google' ),
+		);
+	}
+
+	/*
+	 * Callback function for Save user infos received from google
+	 *
+	 * @since    [NEXT]
+	 */
+	public function siwg_save_google_userinfo() {
+
+		echo sprintf(
+			'<input type="checkbox" name="%1$s" id="%1$s" value="1" %2$s /><p class="description">%3$s</p>',
+			'siwg_save_google_userinfo',
+			checked( get_option( 'siwg_save_google_userinfo' ), true, false ),
+			__( 'If enabled, user info  (full name, language, id, profile-picture and other info, received from google after successful authorization), will be saved in user-metadatas.', 'sign-in-with-google' ),
 		);
 	}
 
@@ -660,13 +691,10 @@ vx($this->user);
 
 		// If user is linked to Google account, sign them in. Otherwise, check the domain
 		// and create the user if necessary.
+		$validUser = null;
 		if ( ! empty( $linked_user ) ) {
 
-			$connected_user = $linked_user[0];
-			wp_set_current_user( $connected_user->ID, $connected_user->user_login );
-			wp_set_auth_cookie( $connected_user->ID );
-			do_action( 'wp_login', $connected_user->user_login, $connected_user ); // phpcs:ignore
-
+			$validUser = $linked_user[0]; 
 		} else {
 
 			$this->check_domain_restriction();
@@ -675,9 +703,28 @@ vx($this->user);
 
 			// Log in the user.
 			if ( $user ) {
-				wp_set_current_user( $user->ID, $user->user_login );
-				wp_set_auth_cookie( $user->ID );
-				do_action( 'wp_login', $user->user_login, $user ); // phpcs:ignore
+				$validUser = $user;
+			}
+		}
+		
+		if ( $validUser ) {
+			
+			wp_set_current_user( $validUser->ID, $validUser->user_login );
+			wp_set_auth_cookie( $validUser->ID );
+			do_action( 'wp_login', $validUser->user_login, $validUser ); // phpcs:ignore
+
+			if ( (bool) get_option ('siwg_save_google_userinfo') ) {
+				update_user_meta ( $validUser->ID, 'siwg_google_userinfo', $this->user );
+				/* ### example data ###
+					'id' => '110835733123456789123'
+					'email' => 'someone@gmail.com'
+					'verified_email' => true/false
+					'name' => 'John Doe'
+					'given_name' => 'John'
+					'family_name' => 'Doe'
+					'picture' => 'https://lh3.googleusercontent.com/a-/afejHEWUKDWhd283yehdw239872DSYWDGFUDdwfdefw=s96-c'
+					'locale' => 'en'
+				*/
 			}
 		}
 
@@ -734,7 +781,7 @@ vx($this->user);
 			'siwg_google_user_default_role'       => get_option( 'siwg_google_user_default_role' ),
 			'siwg_use_google_profile_picture'     => get_option( 'siwg_use_google_profile_picture' ),
 			'siwg_google_domain_restriction'      => get_option( 'siwg_google_domain_restriction' ),
-			'siwg_google_email_sanitization'      => get_option( 'siwg_google_email_sanitization' ),
+			'siwg_google_email_sanitization'      => get_option( 'siwg_google_email_sanitization' ),			
 			'siwg_allow_domain_user_registration' => get_option( 'siwg_allow_domain_user_registration' ),
 			'siwg_show_unlink_in_profile'         => get_option( 'siwg_show_unlink_in_profile' ),
 			'siwg_custom_login_param'             => get_option( 'siwg_custom_login_param' ),

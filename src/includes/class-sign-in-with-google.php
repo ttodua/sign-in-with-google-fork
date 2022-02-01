@@ -80,8 +80,8 @@ class Sign_In_With_Google {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			$this->register_cli_commands();
 		}
-		add_filter( 'siwg_instance', function() { return $this; } );	}
-	/**
+
+		add_filter( 'siwg_instance', function() { return $this; } );	}	/**
 	 * Load the required dependencies for this plugin.
 	 *
 	 * Include the following files that make up the plugin:
@@ -173,17 +173,19 @@ class Sign_In_With_Google {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Sign_In_With_Google_Admin( $this->get_plugin_name(), $this->get_version() );		
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'settings_api_init' );		$this->loader->add_action( 'admin_menu', $plugin_admin, 'settings_menu_init' );	
 		// for extend
 		add_filter( 'siwg_admin_instance', function() use ($plugin_admin) { return $plugin_admin; } );
-	$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'disallow_email_changes' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'settings_api_init' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'settings_menu_init' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'process_settings_export' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'process_settings_import' );
-		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );		$this->loader->add_action( 'show_user_profile', $plugin_admin, 'add_connect_button_to_profile' );
-		$this->loader->add_action( 'login_init', $plugin_admin, 'check_login_redirection', 888 );
+		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' ); 
+		$this->loader->add_action( 'show_user_profile', $plugin_admin, 'add_connect_button_to_profile' );
+		$this->loader->add_action( 'login_init', $plugin_admin, 'check_login_redirection', 888 ); 
+ 
 
 		if ( isset( $_POST['_siwg_account_nonce'] ) ) {
 			$this->loader->add_action( 'admin_init', $plugin_admin, 'disconnect_account' );

@@ -903,13 +903,14 @@ class Sign_In_With_Google_Admin {
 		$code = sanitize_text_field( $code );
 		$redirect_url = site_url( '?' . get_option( 'siwg_google_response_query_slug', 'google_response') );
 		if ($customSiteUrl = get_option ( 'siwg_custom_home_url' )) {
-			$redirect_url = str_replace ( site_url(), $customSiteUrl, $redirect_url );
-		}		$args = array(
+			$redirect_url = $customSiteUrl . '?' . get_option( 'siwg_google_response_query_slug', 'google_response') ;
+		}		
+		$args = array(
 			'body' => array(
 				'code'          => $code,
 				'client_id'     => get_option( 'siwg_google_client_id' ),
 				'client_secret' => get_option( 'siwg_google_client_secret' ),
-				'redirect_uri'  => apply_filters( 'siwg_google_redirect_uri', $redirect_url ),
+				'redirect_uri'  =>  $redirect_url,
 				'grant_type'    => 'authorization_code',
 			),
 		);

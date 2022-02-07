@@ -217,6 +217,7 @@ class Sign_In_With_Google_WPCLI {
 	}
 
 	/**
+
 	 * Handles updating siwg_use_google_profile_picture.
 	 *
 	 * @param bool $set Set google profile images as users profile pic

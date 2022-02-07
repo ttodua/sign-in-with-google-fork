@@ -227,7 +227,8 @@ class Sign_In_With_Google_Admin {
 			'siwg_section'
 		);
 
-		add_settings_field( 			'siwg_allow_domain_user_registration',
+		add_settings_field( 			
+			'siwg_allow_domain_user_registration',
 			__( 'Allow domain user registrations', 'sign-in-with-google' ),
 			array( $this, 'siwg_allow_domain_user_registration' ),
 			'siwg_settings',
@@ -251,6 +252,20 @@ class Sign_In_With_Google_Admin {
 		);
 
 		add_settings_field(
+
+
+
+			'siwg_google_response_query_slug',
+			__( 'Custom query slug', 'sign-in-with-google' ),
+			array( $this, 'siwg_google_response_query_slug' ),
+			'siwg_settings',
+			'siwg_section'
+		);
+
+		add_settings_field(
+
+
+
 			'siwg_show_unlink_in_profile',
 			__( 'Allow users to unlink their email from their profile page', 'sign-in-with-google' ),
 			array( $this, 'siwg_show_unlink_in_profile' ),
@@ -298,6 +313,7 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_allow_domain_user_registration' );
 		register_setting( 'siwg_settings', 'siwg_show_unlink_in_profile' );
 		register_setting( 'siwg_settings', 'siwg_custom_login_param', array( $this, 'custom_login_input_validation' ) );
+		register_setting( 'siwg_settings', 'siwg_google_response_query_slug', 'sanitize_key' );
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
 		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
 		register_setting( 'siwg_settings', 'siwg_disable_login_page' );
@@ -458,6 +474,15 @@ class Sign_In_With_Google_Admin {
 	 */
 	public function siwg_custom_login_param() {
 		echo '<input name="siwg_custom_login_param" id="siwg_custom_login_param" type="text" size="50" value="' . get_option( 'siwg_custom_login_param' ) . '"/>';
+	}
+
+	/**
+	 * Callback function for Google Domain Restriction
+	 *
+	 * @since    1.0.0
+	 */
+	public function siwg_google_response_query_slug() {
+		echo '<input name="siwg_google_response_query_slug" id="siwg_google_response_query_slug" type="text" size="50" value="' . get_option( 'siwg_google_response_query_slug', 'google_response' ) . '"/>';
 	}
 
 	/**
@@ -786,6 +811,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_allow_domain_user_registration' => get_option( 'siwg_allow_domain_user_registration' ),
 			'siwg_show_unlink_in_profile'         => get_option( 'siwg_show_unlink_in_profile' ),
 			'siwg_custom_login_param'             => get_option( 'siwg_custom_login_param' ),
+			'siwg_google_response_query_slug'     => get_option( 'siwg_google_response_query_slug' ),
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
 			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
 		);
@@ -859,7 +885,7 @@ class Sign_In_With_Google_Admin {
 
 		// Sanitize auth code.
 		$code = sanitize_text_field( $code );
-		$redirect_url = site_url( '?' . apply_filters( 'siwg_google_response_slug', 'google_response' ) );
+		$redirect_url = site_url( '?' . get_option( 'siwg_google_response_query_slug', 'google_response') );
 
 		$args = array(
 			'body' => array(

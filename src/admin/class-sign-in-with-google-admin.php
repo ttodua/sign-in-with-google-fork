@@ -675,7 +675,7 @@ class Sign_In_With_Google_Admin {
 	 * @since 1.0.0
 	 */
 	public function authenticate_user() {
-		$params = apply_filters ('sigw_authenticate_user_params', null);
+		$params = apply_filters ('siwg_authenticate_user_params', null);
 		if ( $params === null ){
 			$params = [];
 			$params['code'] = $_GET['code'];

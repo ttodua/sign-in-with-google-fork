@@ -138,7 +138,7 @@ class Sign_In_With_Google {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-siwg-googleauth.php';
 
 		$this->loader = new Sign_In_With_Google_Loader();
-		add_action( 'sigw_plugin_loader_inited', $this->loader );
+		add_action( 'siwg_plugin_loader_inited', $this->loader );
 
 		/**
 		 * Loads theme template functions.

@@ -438,7 +438,7 @@ class Sign_In_With_Google_Admin {
 		echo sprintf(
 			'<input type="checkbox" name="%1$s" id="%1$s" value="1" %2$s /><p class="description">%3$s</p>',
 			'siwg_google_email_sanitization',
-			checked( get_option( 'siwg_google_email_sanitization' ), true, false ),
+			checked( get_option( 'siwg_google_email_sanitization', true ), true, false ),
 			__( 'If enabled, user emails will be sanitized during registration to the base unique account (like <code>james.figard+123@gmail.com</code> to <code>jamesfigard@gmail.com</code> so you can avoid unlimited duplicate/spam registration from gmail aliases).', 'sign-in-with-google' ),
 		);
 	}
@@ -1009,10 +1009,11 @@ class Sign_In_With_Google_Admin {
 
 		$user                           = get_user_by( 'email', $user_data->email );
 		$user_email = $user_data->email;
-		$siwg_google_email_sanitization = (bool) get_option( 'siwg_google_email_sanitization' );
+		$siwg_google_email_sanitization = (bool) get_option( 'siwg_google_email_sanitization', true );
 		if ($siwg_google_email_sanitization) {
 			$user_email = Sign_In_With_Google_Utility::sanitize_google_email( $user_email );
-		}		$allow_domain_user_registration = (bool) get_option( 'siwg_allow_domain_user_registration' );
+		}
+		$allow_domain_user_registration = (bool) get_option( 'siwg_allow_domain_user_registration' );
 		$allow_user_registration        = (bool) get_option( 'users_can_register' );
 
 		// Redirect the user if registrations are disabled and there is no domain user registration override.

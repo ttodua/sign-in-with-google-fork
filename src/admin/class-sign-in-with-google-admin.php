@@ -296,6 +296,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_settings',
 			'siwg_section'
 		);
+
 		add_settings_field(
 			'siwg_password_length',
 			__( 'Default registration password length', 'sign-in-with-google' ),
@@ -303,6 +304,15 @@ class Sign_In_With_Google_Admin {
 			'siwg_settings',
 			'siwg_section'
 		);
+
+		add_settings_field(
+			'siwg_google_custom_redir_url',
+			__( 'Custom redirect url (leave empty for default)', 'sign-in-with-google' ),
+			array( $this, 'siwg_google_custom_redir_url' ),
+			'siwg_settings',
+			'siwg_section'
+		);
+
 		register_setting( 'siwg_settings', 'siwg_google_client_id', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_client_secret', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_user_default_role' );
@@ -318,6 +328,7 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
 		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
 		register_setting( 'siwg_settings', 'siwg_disable_login_page' );
+		register_setting( 'siwg_settings', 'siwg_google_custom_redir_url' );
 	}
 
 	/**
@@ -355,6 +366,15 @@ class Sign_In_With_Google_Admin {
 	}
 
 	/**
+	 * Callback function for Custom redir url
+	 *
+	 * @since    1.0.0
+	 */
+	public function siwg_google_custom_redir_url() {
+		echo '<input name="siwg_google_custom_redir_url" id="siwg_google_custom_redir_url" type="text" size="50" value="' . get_option( 'siwg_google_custom_redir_url' ) . '"/>';
+	}
+
+	/**
 	 * Callback function for Google User Default Role
 	 *
 	 * @since    1.0.0
@@ -389,7 +409,8 @@ class Sign_In_With_Google_Admin {
 		$siwg_urlparts    = parse_url( site_url() );
 		$siwg_domain      = $siwg_urlparts['host'];
 		$siwg_domainparts = explode( '.', $siwg_domain );
-		$siwg_domain      = $siwg_domainparts[ count( $siwg_domainparts ) - 2 ] . '.' . $siwg_domainparts[ count( $siwg_domainparts ) - 1 ];
+		// fix for localhost
+		$siwg_domain = count( $siwg_domainparts ) === 1 ? $siwg_domainparts[0] : $siwg_domainparts[ count( $siwg_domainparts ) - 2 ] . '.' . $siwg_domainparts[ count( $siwg_domainparts ) - 1 ];
 
 		?>
 		<input name="siwg_google_domain_restriction" id="siwg_google_domain_restriction" type="text" size="50" value="<?php echo get_option( 'siwg_google_domain_restriction' ); ?>" placeholder="<?php echo $siwg_domain; ?>">
@@ -830,6 +851,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_custom_home_url'     			  => get_option( 'siwg_custom_home_url' ),
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
 			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
+			'siwg_google_custom_redir_url'        => get_option( 'siwg_google_custom_redir_url' ),
 		);
 
 		ignore_user_abort( true );
@@ -901,15 +923,13 @@ class Sign_In_With_Google_Admin {
 
 		// Sanitize auth code.
 		$code = sanitize_text_field( $code );
-		$responseSlug = get_option( 'siwg_google_response_query_slug', 'google_response');
-		$customSiteUrl = get_option ( 'siwg_custom_home_url' );
-		$redirect_url = $customSiteUrl ? $customSiteUrl . '?' . $responseSlug :  site_url( '?' . $responseSlug );
+
 		$args = array(
 			'body' => array(
 				'code'          => $code,
 				'client_id'     => get_option( 'siwg_google_client_id' ),
 				'client_secret' => get_option( 'siwg_google_client_secret' ),
-				'redirect_uri'  =>  $redirect_url,
+				'redirect_uri'  => site_url( get_option ( 'siwg_custom_home_url', '?'. get_option( 'siwg_google_response_query_slug', 'google_response') )),
 				'grant_type'    => 'authorization_code',
 			),
 		);

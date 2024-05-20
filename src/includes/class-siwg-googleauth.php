@@ -61,9 +61,8 @@ class SIWG_GoogleAuth {
 		$scopes[]     = 'https://www.googleapis.com/auth/userinfo.profile';
 		$this->scopes = urlencode( implode( ' ', $scopes ) );
 
-		$responseSlug = get_option( 'siwg_google_response_query_slug', 'google_response');
-		$customSiteUrl = get_option ( 'siwg_custom_home_url' );
-		$this->redirect_uri = $customSiteUrl ? $customSiteUrl . '?' . $responseSlug :  site_url( '?' . $responseSlug );
+		$response_slug = get_option( 'siwg_google_response_query_slug', 'google_response');
+		$this->redirect_uri = site_url( get_option( 'siwg_google_custom_redir_url', '?' . $response_slug) );
 	}
 
 	/**

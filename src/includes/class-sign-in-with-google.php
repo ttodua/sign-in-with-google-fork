@@ -199,9 +199,8 @@ class Sign_In_With_Google {
 		// Handle Google's response before anything is rendered.
 		$custom_path = get_option( 'siwg_google_custom_redir_url' );
 		$is_custom_path = ($custom_path && str_starts_with( $_SERVER['REQUEST_URI'], '/'. $custom_path ) );
-		$response_slug = get_option( 'siwg_google_response_query_slug', 'google_response');
 
-		if ( (isset( $_GET[$response_slug] ) || $is_custom_path) && isset( $_GET['code'] ) ) {
+		if ( (isset( $_GET['google_response'] ) || $is_custom_path) && isset( $_GET['code'] ) ) {
 			$this->loader->add_action( 'init', $plugin_admin, 'authenticate_user' );
 		}
 

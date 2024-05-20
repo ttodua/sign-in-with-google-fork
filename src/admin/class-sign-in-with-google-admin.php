@@ -252,23 +252,9 @@ class Sign_In_With_Google_Admin {
 		);
 
 		add_settings_field(
-
-
-
 			'siwg_google_response_query_slug',
 			__( 'Custom query slug', 'sign-in-with-google' ),
 			array( $this, 'siwg_google_response_query_slug' ),
-			'siwg_settings',
-			'siwg_section'
-		);
-
-		add_settings_field(
-
-
-
-			'siwg_custom_home_url',
-			__( 'Custom home url override', 'sign-in-with-google' ),
-			array( $this, 'siwg_custom_home_url' ),
 			'siwg_settings',
 			'siwg_section'
 		);
@@ -316,7 +302,6 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_show_unlink_in_profile' );
 		register_setting( 'siwg_settings', 'siwg_custom_login_param', array( $this, 'custom_login_input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_response_query_slug', 'sanitize_key' );
-		register_setting( 'siwg_settings', 'siwg_custom_home_url', 'sanitize_text_field' );
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
 		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
 		register_setting( 'siwg_settings', 'siwg_disable_login_page' );
@@ -497,20 +482,6 @@ class Sign_In_With_Google_Admin {
 	 */
 	public function siwg_google_response_query_slug() {
 		echo '<input name="siwg_google_response_query_slug" id="siwg_google_response_query_slug" type="text" size="50" value="' . get_option( 'siwg_google_response_query_slug', 'google_response' ) . '"/>';
-	}
-
-	/**
-	 * Callback function for Custom home-url override
-	 *
-	 * @since    1.0.0
-	 */
-	public function siwg_custom_home_url() {
-		echo '<input name="siwg_custom_home_url" id="siwg_custom_home_url" type="text" size="50" value="' . get_option( 'siwg_custom_home_url' ) . '"/>';
-		echo sprintf(
-			'<p class="description">%1$s : <code>%2$s</code></p>',
-			__( 'Use this field, if you have different home-url. Note, your current site-url is' ),
-			site_url(),
-		);
 	}
 
 	/**
@@ -831,7 +802,6 @@ class Sign_In_With_Google_Admin {
 			'siwg_show_unlink_in_profile'         => get_option( 'siwg_show_unlink_in_profile' ),
 			'siwg_custom_login_param'             => get_option( 'siwg_custom_login_param' ),
 			'siwg_google_response_query_slug'     => get_option( 'siwg_google_response_query_slug' ),
-			'siwg_custom_home_url'     			  => get_option( 'siwg_custom_home_url' ),
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
 			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
 			'siwg_google_custom_redir_url'        => get_option( 'siwg_google_custom_redir_url' ),

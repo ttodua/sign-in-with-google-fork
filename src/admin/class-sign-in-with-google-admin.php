@@ -298,14 +298,6 @@ class Sign_In_With_Google_Admin {
 		);
 
 		add_settings_field(
-			'siwg_password_length',
-			__( 'Default registration password length', 'sign-in-with-google' ),
-			array( $this, 'siwg_password_length' ),
-			'siwg_settings',
-			'siwg_section'
-		);
-
-		add_settings_field(
 			'siwg_google_custom_redir_url',
 			__( 'Custom redirect url (leave empty for default)', 'sign-in-with-google' ),
 			array( $this, 'siwg_google_custom_redir_url' ),
@@ -542,15 +534,6 @@ class Sign_In_With_Google_Admin {
 
 		echo '<input type="checkbox" name="siwg_allow_mail_change" id="siwg_allow_mail_change" value="1" ' . checked( get_option( 'siwg_allow_mail_change' ), true, false ) . ' />';
 
-	}
-
-	 /**
-	 * Callback function for Default password length
-	 *
-	 * @since    1.0.0
-	 */
-	public function siwg_password_length() {
-		echo '<input name="siwg_password_length" id="siwg_password_length" type="number" value="' . get_option( 'siwg_password_length', 12 ) . '"/>';
 	}
 
 	/**
@@ -1036,7 +1019,7 @@ class Sign_In_With_Google_Admin {
 			return $user; 
 		}
 
-		$user_pass    = wp_generate_password( get_option( 'siwg_password_length', 12 ) );
+		$user_pass    = wp_generate_password( 18 );
 		$user_email   = $user_data->email;
 		// set username as friendly as possible
 		$user_email_data = explode( '@', $user_email );

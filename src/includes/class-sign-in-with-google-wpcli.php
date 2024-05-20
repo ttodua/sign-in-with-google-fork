@@ -271,20 +271,6 @@ class Sign_In_With_Google_WPCLI {
 	}
 
 	/**
-	 * Sanitize command arguments
-	 * Handles updating siwg_password_length.
-	 *
-	 * @param bool $length Set default registration password length.
-	 */
-	private function update_password_length( $length = 12 ) {
-		$result = update_option( 'siwg_password_length', (int) $length );
-
-		if ( ! $result ) {
-			WP_CLI::warning( 'Skipping - Setting already matches' );
-		}
-	}
-
-	/**
 	 * Sanitize command arguments	 *
 	 * @param bool $show Show the Unlink Account button in user profile page.
 	 */

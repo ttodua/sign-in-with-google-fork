@@ -204,19 +204,6 @@ class Sign_In_With_Google_WPCLI {
 	}
 
 	/**
-	 * Handles updating siwg_custom_login_param.
-	 *
-	 * @param string $param The string to use as the login parameter.
-	 */
-	private function update_custom_login_param( $param ) {
-		$result = update_option( 'siwg_custom_login_param', $param );
-
-		if ( ! $result ) {
-			WP_CLI::warning( 'Skipping Custom Login Parameter - Setting already matches' );
-		}
-	}
-
-	/**
 
 	 * Handles updating siwg_use_google_profile_picture.
 	 *

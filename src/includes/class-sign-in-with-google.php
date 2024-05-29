@@ -174,10 +174,11 @@ class Sign_In_With_Google {
 	private function define_admin_hooks() {
 
 		$plugin_admin = new Sign_In_With_Google_Admin( $this->get_plugin_name(), $this->get_version() );
+		if (get_option('siwg_expose_class_instance')) {
+			$GLOBALS['SIGN_IN_WITH_GOOGLE_INSTANCE_ADMIN'] = $plugin_admin;
+		}
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'settings_api_init' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'settings_menu_init' );	
-		// for extend
-		add_filter( 'siwg_admin_instance', function() use ($plugin_admin) { return $plugin_admin; } );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'disallow_email_changes' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'settings_api_init' );

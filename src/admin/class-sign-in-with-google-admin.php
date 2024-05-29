@@ -279,7 +279,7 @@ class Sign_In_With_Google_Admin {
 
 		add_settings_field(
 			'siwg_expose_class_instance',
-			__( 'If you want instantiated class of SignInWithGoogle to be available for other plugins under $GLOBALS[\'SIGN_IN_WITH_GOOGLE_INSTANCE\']', 'sign-in-with-google' ),
+			__( 'Expose plugin instance', 'sign-in-with-google' ),
 			array( $this, 'siwg_expose_class_instance' ),
 			'siwg_settings',
 			'siwg_section'
@@ -439,7 +439,7 @@ class Sign_In_With_Google_Admin {
 			'<input type="checkbox" name="%1$s" id="%1$s" value="1" %2$s /><p class="description">%3$s</p>',
 			'siwg_expose_class_instance',
 			checked( get_option( 'siwg_expose_class_instance' ), true, false ),
-			__( 'Make SIWG instance available for other codes', 'sign-in-with-google' ),
+			__( 'If you want instantiated class of SignInWithGoogle to be available for other plugins under $GLOBALS[\'SIGN_IN_WITH_GOOGLE_INSTANCE_PUBLIC\'] and $GLOBALS[\'SIGN_IN_WITH_GOOGLE_INSTANCE_ADMIN\']', 'sign-in-with-google' ),
 		);
 	}
 
@@ -655,14 +655,13 @@ class Sign_In_With_Google_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	public function authenticate_user() {
-		$params = apply_filters ('siwg_authenticate_user_params', null);
-		if ( $params === null ){
-			$params = [];
-			$params['code'] = $_GET['code'];
-			$params['state'] = ( isset( $_GET['state'] ) ) ? $_GET['state'] : '';
-			$params['redirect_after_login'] = true;
-		}
+	public function authenticate_user($code = null, $state = null) {
+
+		$params = [];
+		$params['code'] = $code ?: $_GET['code'];
+		$params['state'] = $state ?: $_GET['state'];
+		$params['redirect_after_login'] = true;
+
 		$this->set_access_token( $params['code'] );
 
 		$this->set_user_info();

@@ -966,20 +966,16 @@ class Sign_In_With_Google_Admin {
 		while ( username_exists($user_login) ) {
 			$user_login  = $user_login . rand(1,10);
 		}
-		$first_name   = $user_data->given_name;
-		$last_name    = $user_data->family_name;
-		$display_name = $first_name . ' ' . $last_name;
-		$role         = get_option( 'siwg_google_user_default_role', 'subscriber' );
 
 		$user = array(
 			'user_pass'       => $user_pass,
 			'user_login'      => $user_email, //$user_login
 			'user_email'      => $user_email,
-			'display_name'    => $display_name,
-			'first_name'      => $first_name,
-			'last_name'       => $last_name,
+			'display_name'    => $user_data->given_name . ' ' . $user_data->family_name,
+			'first_name'      => $user_data->given_name,
+			'last_name'       => $user_data->family_name,
 			'user_registered' => gmdate( 'Y-m-d H:i:s' ),
-			'role'            => $role,
+			'role'            => get_option( 'siwg_google_user_default_role', 'subscriber' ),
 		);
 		$user = apply_filters ('siwg_pre_insert_user', $user, $user_data);
 		$new_user_id = wp_insert_user( $user );

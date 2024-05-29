@@ -85,7 +85,7 @@ class Sign_In_With_Google_WPCLI {
 		$sanitized_args = $this->sanitize_args( $assoc_args );
 
 		foreach ( $sanitized_args as $key => $value ) {
-			$method = 'update_' . $key;
+			$method = 'update_sigw_' . $key;
 			$this->$method( $value );
 		}
 
@@ -98,7 +98,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param string $client_id The ID to use with Google's Oauth.
 	 */
-	private function update_client_id( $client_id = '' ) {
+	private function update_siwg_google_client_id( $client_id = '' ) {
 		if ( '' === $client_id ) {
 			WP_CLI::error( 'Please enter a valid Client ID' );
 		}
@@ -115,7 +115,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param string $client_secret The secret to use with Google's Oauth.
 	 */
-	private function update_client_secret( $client_secret = '' ) {
+	private function update_siwg_google_client_secret( $client_secret = '' ) {
 		if ( '' === $client_secret ) {
 			WP_CLI::error( 'Please enter a valid Client Secret' );
 		}
@@ -132,7 +132,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param string $role The role applied for new users.
 	 */
-	private function update_default_role( $role = 'subscriber' ) {
+	private function update_siwg_google_user_default_role( $role = 'subscriber' ) {
 		if ( '' === $role ) {
 			WP_CLI::error( 'Please enter a valid user role' );
 		}
@@ -162,7 +162,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param string $show Email sanitization option
 	 */
-	private function update_google_email_sanitization( $show = 0 ) {
+	private function update_siwg_google_email_sanitization( $show = 0 ) {
 		$result = update_option( 'siwg_google_email_sanitization', boolval( $show ) );
 
 		if ( ! $result ) {
@@ -176,7 +176,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param string $domains The string of domains to verify and use.
 	 */
-	private function update_domains( $domains = '' ) {
+	private function update_siwg_google_domain_restriction( $domains = '' ) {
 
 		if ( ! Sign_In_With_Google_Utility::verify_domain_list( $domains ) ) {
 			WP_CLI::error( 'Please use a valid list of domains' );
@@ -195,8 +195,34 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param bool $enable The boolean, whether enable or not
 	 */
-	private function update_save_google_userinfo( $enable = 0 ) {
+	private function update_siwg_save_google_userinfo( $enable = 0 ) {
 		$result = update_option( 'siwg_save_google_userinfo', $enable );
+
+		if ( ! $result ) {
+			WP_CLI::warning( 'Skipping - Setting already matches' );
+		}
+	}
+
+	/**
+	 * Handles updating siwg_google_custom_redir_url.
+	 *
+	 * @param bool $url The target url
+	 */
+	private function update_siwg_google_custom_redir_url( $url ) {
+		$result = update_option( 'siwg_google_custom_redir_url', $url );
+
+		if ( ! $result ) {
+			WP_CLI::warning( 'Skipping - Setting already matches' );
+		}
+	}
+
+	/**
+	 * Handles updating siwg_expose_class_instance.
+	 *
+	 * @param bool $enable The boolean, whether enable or not
+	 */
+	private function update_siwg_expose_class_instance( $enable = 0 ) {
+		$result = update_option( 'siwg_expose_class_instance', $enable );
 
 		if ( ! $result ) {
 			WP_CLI::warning( 'Skipping - Setting already matches' );
@@ -209,7 +235,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param bool $set Set google profile images as users profile pic
 	 */
-	private function update_use_google_profile_picture( $set = 0 ) {
+	private function update_siwg_use_google_profile_picture( $set = 0 ) {
 		$result = update_option( 'siwg_use_google_profile_picture', boolval( $set ) );
 
 		if ( ! $result ) {
@@ -222,7 +248,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param bool $show Show the Sign In With Google button on the login form.
 	 */
-	private function update_show_on_login( $show = 0 ) {
+	private function update_siwg_show_on_login( $show = 0 ) {
 		$result = update_option( 'siwg_show_on_login', boolval( $show ) );
 
 		if ( ! $result ) {
@@ -231,11 +257,11 @@ class Sign_In_With_Google_WPCLI {
 	}
 
 	/**
-	 * Handles updating siwg_show_on_login.
+	 * Handles updating siwg_allow_mail_change.
 	 *
 	 * @param bool $allow Allow regular user to change own email.
 	 */
-	private function update_allow_mail_change( $allow = 0 ) {
+	private function update_siwg_allow_mail_change( $allow = 0 ) {
 		$result = update_option( 'siwg_allow_mail_change', boolval( $allow ) );
 
 		if ( ! $result ) {
@@ -247,7 +273,7 @@ class Sign_In_With_Google_WPCLI {
 	 * Sanitize command arguments	 *
 	 * @param bool $show Show the Unlink Account button in user profile page.
 	 */
-	private function update_show_unlink_in_profile( $show = 0 ) {
+	private function update_siwg_show_unlink_in_profile( $show = 0 ) {
 		$result = update_option( 'siwg_show_unlink_in_profile', boolval( $show ) );
 
 		if ( ! $result ) {
@@ -260,7 +286,7 @@ class Sign_In_With_Google_WPCLI {
 	 *
 	 * @param bool $allow Disable Login page
 	 */
-	private function update_disable_login_page( $disable = 0 ) {
+	private function update_siwg_disable_login_page( $disable = 0 ) {
 		$result = update_option( 'siwg_disable_login_page', boolval( $disable ) );
 
 		if ( ! $result ) {

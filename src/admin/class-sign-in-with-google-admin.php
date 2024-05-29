@@ -543,7 +543,7 @@ class Sign_In_With_Google_Admin {
 	 */
 	public function siwg_use_google_profile_picture() {
 
-		echo '<input type="checkbox" name="siwg_use_google_profile_picture" id="siwg_use_google_profile_picture" value="1" ' . checked( get_option( 'siwg_use_google_profile_picture' ), true, false ) . ' />';
+		echo '<input type="checkbox" name="siwg_use_google_profile_picture" id="siwg_use_google_profile_picture" value="1" ' . checked( get_option( 'siwg_use_google_profile_picture', true ), true, false ) . ' />';
 
 	}
 
@@ -658,79 +658,67 @@ class Sign_In_With_Google_Admin {
 
 		if (!$this->user) {
 			// Something went wrong, redirect to the login page.
-			throw new \Exception ( 'Could not validate user' );
+			return ['error'=>'Could not validate user'];
 		}
-
-		$redirect_after_login_url = apply_filters( 'siwg_google_redirect_after_login_url', admin_url( 'profile.php?redir234' ) );
 
 		// If the user is logged in, just connect the authenticated Google account.
 		if ( is_user_logged_in() ) {
+
 			// link the account.
 			$this->connect_account( $this->user->email );
 
-			if ($redirect_after_login_url) {
-				// redirect back to the profile edit page.
-				wp_redirect( $redirect_after_login_url );
-				exit;
+		} else {
+				
+			// Check if a user is linked to this Google account.
+			$linked_user = get_users(
+				array(
+					'meta_key'   => 'siwg_google_account',
+					'meta_value' => $this->user->email,
+				)
+			);
+
+			// If user is linked to Google account, sign them in. Otherwise, check the domain
+			// and create the user if necessary.
+			$validUser = null;
+			if ( ! empty( $linked_user ) ) {
+
+				$validUser = $linked_user[0]; 
+			} else {
+
+				$this->check_domain_restriction();
+
+				$result_user = $this->find_by_email_or_create( $this->user );
+
+				if (is_int($result_user)) {
+					$validUser = get_user_by( 'id', $result_user );
+					// link the account.
+					$this->connect_account( $this->user->email, $validUser );
+				}
 			}
-			return;
+
+			if ( $validUser ) {
+				
+				wp_set_current_user( $validUser->ID, $validUser->user_login );
+				wp_set_auth_cookie( $validUser->ID );
+				do_action( 'wp_login', $validUser->user_login, $validUser ); // phpcs:ignore
+
+				if ( (bool) get_option ('siwg_save_google_userinfo') ) {
+					update_user_meta ( $validUser->ID, 'siwg_google_userinfo', apply_filters( 'siwg_saved_google_userinfo', $this->user ) );
+				}
+			}
 		}
 
 		// Decode passed back state.
-		$raw_state = $params['state'];
-		$state     = json_decode( base64_decode( $raw_state ) );
+		$state     = json_decode( base64_decode( $params['state']) );
 
+		$redirect = !empty($state->my_redirect_uri ) ? $state->my_redirect_uri  : admin_url('profile.php?siwg_redirected'); // Send users to the dashboard by default.
+		$redirect = apply_filters( 'siwg_google_redirect_after_login_url', $redirect );
 
-		// Check if a user is linked to this Google account.
-		$linked_user = get_users(
-			array(
-				'meta_key'   => 'siwg_google_account',
-				'meta_value' => $this->user->email,
-			)
-		);
-
-		// If user is linked to Google account, sign them in. Otherwise, check the domain
-		// and create the user if necessary.
-		$validUser = null;
-		if ( ! empty( $linked_user ) ) {
-
-			$validUser = $linked_user[0]; 
-		} else {
-
-			$this->check_domain_restriction();
-
-			$result_user = $this->find_by_email_or_create( $this->user );
-
-			if ($result_user) {
-				// link the account.
-				$this->connect_account( $this->user->email );
-				$validUser = $result_user; 
-			}
-		}
-		
-		v($validUser);
-		vx($linked_user);
-
-		if ( $validUser ) {
-			
-			wp_set_current_user( $validUser->ID, $validUser->user_login );
-			wp_set_auth_cookie( $validUser->ID );
-			do_action( 'wp_login', $validUser->user_login, $validUser ); // phpcs:ignore
-
-			if ( (bool) get_option ('siwg_save_google_userinfo') ) {
-				update_user_meta ( $validUser->ID, 'siwg_google_userinfo', apply_filters( 'siwg_saved_google_userinfo', $this->user ) );
-			}
-		}
-
-		$redirect = !empty($state->my_redirect_uri ) ? $state->my_redirect_uri  : admin_url('profile.php?red999'); // Send users to the dashboard by default.
-
-		$redirect_after_login_url = apply_filters( 'siwg_google_redirect_after_login_url', $redirect );
-
-		if ( $redirect_after_login_url ) {
-			wp_redirect( $redirect_after_login_url ); //phpcs:ignore
+		if ( $redirect ) {
+			wp_redirect( $redirect ); //phpcs:ignore
 			exit;
 		}
-		return;
+		return ['error'=>null];
 	}
 
 	/**
@@ -766,7 +754,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_google_client_id'               => get_option( 'siwg_google_client_id' ),
 			'siwg_google_client_secret'           => get_option( 'siwg_google_client_secret' ),
 			'siwg_google_user_default_role'       => get_option( 'siwg_google_user_default_role' ),
-			'siwg_use_google_profile_picture'     => get_option( 'siwg_use_google_profile_picture' ),
+			'siwg_use_google_profile_picture'     => get_option( 'siwg_use_google_profile_picture', true ),
 			'siwg_google_domain_restriction'      => get_option( 'siwg_google_domain_restriction' ),
 			'siwg_google_email_sanitization'      => get_option( 'siwg_google_email_sanitization' ),			
 			'siwg_allow_domain_user_registration' => get_option( 'siwg_allow_domain_user_registration' ),
@@ -774,7 +762,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
 			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
 			'siwg_google_custom_redir_url'        => get_option( 'siwg_google_custom_redir_url', '?google_response' ),
-			'siwg_expose_class_instance'     => get_option( 'siwg_expose_class_instance' ),
+			'siwg_expose_class_instance'          => get_option( 'siwg_expose_class_instance' ),
 		);
 
 		ignore_user_abort( true );
@@ -894,13 +882,13 @@ class Sign_In_With_Google_Admin {
 	 * @since 1.3.1
 	 * @param string $email The users authenticated Google account email.
 	 */
-	protected function connect_account( $email = '' ) {
+	protected function connect_account( $email = '', $wp_user = null ) {
 
 		if ( ! $email ) {
 			return false;
 		}
 
-		$current_user = wp_get_current_user();
+		$current_user = $wp_user ?: wp_get_current_user();
 
 		if ( ! ( $current_user instanceof WP_User ) ) {
 			return false;
@@ -941,7 +929,7 @@ class Sign_In_With_Google_Admin {
 	 */
 	protected function find_by_email_or_create( $user_data ) {
 
-		$user                           = get_user_by( 'email', $user_data->email );
+		$user = get_user_by( 'email', $user_data->email );
 		$user_email = $user_data->email;
 		$siwg_google_email_sanitization = (bool) get_option( 'siwg_google_email_sanitization', true );
 		if ($siwg_google_email_sanitization) {
@@ -1003,7 +991,7 @@ class Sign_In_With_Google_Admin {
 			return false;
 		} else {
 			$this->check_and_update_profile_pic ($new_user_id, $user_data);
-			return get_user_by( 'id', $new_user_id );
+			return $new_user_id;
 		}
 
 	}
@@ -1019,15 +1007,43 @@ class Sign_In_With_Google_Admin {
 	 */
 	protected function check_and_update_profile_pic( $user_id, $user_data ) {
 		// add profile image from google, that can be used as alternative to gravatar
-		if( (bool) get_option( 'siwg_use_google_profile_picture' ) ) {
-			if ( property_exists( $user_data, 'picture' ) ) {
-				update_user_meta( $user_id, 'siwg_profile_image', $user_data->picture);
-			}
-			else {
-				delete_user_meta( $user_id, 'siwg_profile_image');
-			}
+		if ( property_exists( $user_data, 'picture' ) ) {
+			update_user_meta( $user_id, 'siwg_profile_image', $user_data->picture);
 		}
 	}
+
+	function slug_get_avatar( $avatar, $id_or_email, $size, $default, $alt ) {
+
+		if (!get_option('siwg_use_google_profile_picture', true)) {
+			return $avatar;
+		}
+
+		//If is email, try and find user ID
+		if( ! is_numeric( $id_or_email ) && is_email( $id_or_email ) ){
+			$user  =  get_user_by( 'email', $id_or_email );
+			if( $user ){
+				$id_or_email = $user->ID;
+			}
+		}
+	
+		//if not user ID, return
+		if( ! is_numeric( $id_or_email ) ){
+			return $avatar;
+		}
+	
+		//Find URL of saved avatar in user metaget_user_meta( $id, 'siwg_profile_image')
+		$saved = get_user_meta( $id_or_email, 'siwg_profile_image', true );
+
+		//check if it is a URL
+		if( filter_var( $saved, FILTER_VALIDATE_URL ) ) {
+			//return saved image
+			return sprintf( '<img src="%s" />', esc_url( $saved ));
+		}
+	
+		//return normal
+		return $avatar;
+	}
+	
 
 	/**
 	 * Get the user's info.

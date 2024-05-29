@@ -148,16 +148,18 @@ class Sign_In_With_Google_Admin {
 		<?php
 	}
 
+	public $google_logo_svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M1 1h22v22H1z" fill="none"/></svg>';
+
 	/**
 	 * Initialize the settings menu.
 	 *
 	 * @since 1.0.0
 	 */
 	public function settings_menu_init() {
-
+		$prefix_logo = '<span style="width:12px; height:12px; display: inline-block;">' . $this->google_logo_svg . '</span>';
 		add_options_page(
 			__( 'Sign in with Google', 'sign-in-with-google' ), // The text to be displayed for this actual menu item.
-			__( 'Sign in with Google', 'sign-in-with-google' ), // The title to be displayed on this menu's corresponding page.
+			__( $prefix_logo . ' Sign in with Google', 'sign-in-with-google' ), // The title to be displayed on this menu's corresponding page.
 			'manage_options',                                   // Which capability can see this menu.
 			'siwg_settings',                                    // The unique ID - that is, the slug - for this menu item.
 			array( $this, 'settings_page_render' )              // The name of the function to call when rendering this menu's page.
@@ -275,6 +277,14 @@ class Sign_In_With_Google_Admin {
 			'siwg_section'
 		);
 
+		add_settings_field(
+			'siwg_expose_class_instance',
+			__( 'If you want instantiated class of SignInWithGoogle to be available for other plugins under $GLOBALS[\'SIGN_IN_WITH_GOOGLE_INSTANCE\']', 'sign-in-with-google' ),
+			array( $this, 'siwg_expose_class_instance' ),
+			'siwg_settings',
+			'siwg_section'
+		);
+
 		register_setting( 'siwg_settings', 'siwg_google_client_id', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_client_secret', array( $this, 'input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_user_default_role' );
@@ -288,6 +298,7 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
 		register_setting( 'siwg_settings', 'siwg_disable_login_page' );
 		register_setting( 'siwg_settings', 'siwg_google_custom_redir_url', array( $this, 'custom_login_input_validation' ) );
+		register_setting( 'siwg_settings', 'siwg_expose_class_instance' );
 	}
 
 	/**
@@ -414,6 +425,21 @@ class Sign_In_With_Google_Admin {
 			'siwg_allow_domain_user_registration',
 			checked( get_option( 'siwg_allow_domain_user_registration' ), true, false ),
 			__( 'If enabled, users with domains in the "Restrict to Domain" field will be allowed to register new user accounts even when new user registrations are disabled.', 'sign-in-with-google' ),
+		);
+	}
+
+	/**
+	 * Callback function for Allow users with the approved domain register accounts
+	 *
+	 * @since    [NEXT]
+	 */
+	public function siwg_expose_class_instance() {
+
+		echo sprintf(
+			'<input type="checkbox" name="%1$s" id="%1$s" value="1" %2$s /><p class="description">%3$s</p>',
+			'siwg_expose_class_instance',
+			checked( get_option( 'siwg_expose_class_instance' ), true, false ),
+			__( 'Make SIWG instance available for other codes', 'sign-in-with-google' ),
 		);
 	}
 
@@ -768,6 +794,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
 			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
 			'siwg_google_custom_redir_url'        => get_option( 'siwg_google_custom_redir_url', '?google_response' ),
+			'siwg_expose_class_instance'     => get_option( 'siwg_expose_class_instance' ),
 		);
 
 		ignore_user_abort( true );

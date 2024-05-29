@@ -429,7 +429,7 @@ class Sign_In_With_Google_Admin {
 		echo sprintf(
 			'<input type="checkbox" name="%1$s" id="%1$s" value="1" %2$s /><p class="description">%3$s</p>',
 			'siwg_expose_class_instance',
-			checked( get_option( 'siwg_expose_class_instance' ), true, false ),
+			checked( get_option( 'siwg_expose_class_instance', true ), true, false ),
 			__( 'If you want instantiated class of SignInWithGoogle to be available for other plugins under $GLOBALS[\'SIGN_IN_WITH_GOOGLE_INSTANCE_PUBLIC\'] and $GLOBALS[\'SIGN_IN_WITH_GOOGLE_INSTANCE_ADMIN\']', 'sign-in-with-google' ),
 		);
 	}
@@ -762,7 +762,7 @@ class Sign_In_With_Google_Admin {
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
 			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
 			'siwg_google_custom_redir_url'        => get_option( 'siwg_google_custom_redir_url', '?google_response' ),
-			'siwg_expose_class_instance'          => get_option( 'siwg_expose_class_instance' ),
+			'siwg_expose_class_instance'          => get_option( 'siwg_expose_class_instance', true ),
 		);
 
 		ignore_user_abort( true );

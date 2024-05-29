@@ -69,7 +69,7 @@ function sign_in_with_google_run() {
 	define( 'SIWG_PLUGIN_FILE', basename( dirname( __FILE__ ) ) . '/' . basename( __FILE__ ) );
 	$plugin = new Sign_In_With_Google( '1.6.0' );
 	$plugin->run();
-	if (get_option('siwg_expose_class_instance')) {
+	if (get_option('siwg_expose_class_instance', true)) {
 		$GLOBALS['SIGN_IN_WITH_GOOGLE_INSTANCE_PUBLIC'] = $plugin;
 	}
 

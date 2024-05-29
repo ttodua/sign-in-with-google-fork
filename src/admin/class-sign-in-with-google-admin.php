@@ -662,9 +662,9 @@ class Sign_In_With_Google_Admin {
 		$params['state'] = $state ?: $_GET['state'];
 		$params['redirect_after_login'] = true;
 
-		$this->set_access_token( $params['code'] );
+		$access_token = $this->set_access_token( $params['code'] );
+		$this->user = $this->get_user_by_token( $access_token );
 
-		$this->set_user_info();
 		// If the user is logged in, just connect the authenticated Google account.
 		if ( is_user_logged_in() ) {
 			// link the account.
@@ -860,7 +860,7 @@ class Sign_In_With_Google_Admin {
 	protected function set_access_token( $code = '' ) {
 
 		if ( ! $code ) {
-			return new WP_Error( 'No authorization code provided.' );
+			throw new WP_Error( 'No authorization code provided.' );
 		}
 
 		// Sanitize auth code.
@@ -890,15 +890,6 @@ class Sign_In_With_Google_Admin {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Sets the user's information.
-	 *
-	 * @since 1.2.0
-	 */
-	protected function set_user_info() {
-		$this->user = $this->get_user_by_token( $this->access_token );
 	}
 
 	/**

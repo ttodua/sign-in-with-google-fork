@@ -883,7 +883,8 @@ class Sign_In_With_Google_Admin {
 		$response = wp_remote_post( 'https://www.googleapis.com/oauth2/v4/token', $args );
 		
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
-		if ( '' !== $body->access_token ) {
+
+		if ( isset($body->access_token) && '' !== $body->access_token ) {
 			$this->access_token = $body->access_token;
 			return $this->access_token;
 		}

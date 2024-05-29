@@ -39,15 +39,6 @@ class Sign_In_With_Google_Admin {
 	private $version;
 
 	/**
-	 * The access token for accessing Google APIs.
-	 *
-	 * @since 1.2.0
-	 * @access private
-	 * @var string $access_token The token.
-	 */
-	private $access_token = '';
-
-	/**
 	 * The user's information.
 	 *
 	 * @since 1.2.0
@@ -665,26 +656,30 @@ class Sign_In_With_Google_Admin {
 		$access_token = $this->set_access_token( $params['code'] );
 		$this->user = $this->get_user_by_token( $access_token );
 
+		if (!$this->user) {
+			// Something went wrong, redirect to the login page.
+			throw new \Exception ( 'Could not validate user' );
+		}
+
+		$redirect_after_login_url = apply_filters( 'siwg_google_redirect_after_login_url', admin_url( 'profile.php?redir234' ) );
+
 		// If the user is logged in, just connect the authenticated Google account.
 		if ( is_user_logged_in() ) {
 			// link the account.
 			$this->connect_account( $this->user->email );
 
-			if ( !array_key_exists('redirect_after_login_url', $params) ) {
-				$params['redirect_after_login_url'] = admin_url( 'profile.php' );
-			}
-			if ( $params['redirect_after_login'] ) {
+			if ($redirect_after_login_url) {
 				// redirect back to the profile edit page.
-				wp_redirect( $params['redirect_after_login_url'] );
+				wp_redirect( $redirect_after_login_url );
 				exit;
-			} else {
-				return $params['redirect_after_login_url'];
 			}
+			return;
 		}
 
 		// Decode passed back state.
 		$raw_state = $params['state'];
 		$state     = json_decode( base64_decode( $raw_state ) );
+
 
 		// Check if a user is linked to this Google account.
 		$linked_user = get_users(
@@ -704,14 +699,18 @@ class Sign_In_With_Google_Admin {
 
 			$this->check_domain_restriction();
 
-			$user = $this->find_by_email_or_create( $this->user );
+			$result_user = $this->find_by_email_or_create( $this->user );
 
-			// Log in the user.
-			if ( $user ) {
-				$validUser = $user;
+			if ($result_user) {
+				// link the account.
+				$this->connect_account( $this->user->email );
+				$validUser = $result_user; 
 			}
 		}
 		
+		v($validUser);
+		vx($linked_user);
+
 		if ( $validUser ) {
 			
 			wp_set_current_user( $validUser->ID, $validUser->user_login );
@@ -719,37 +718,19 @@ class Sign_In_With_Google_Admin {
 			do_action( 'wp_login', $validUser->user_login, $validUser ); // phpcs:ignore
 
 			if ( (bool) get_option ('siwg_save_google_userinfo') ) {
-				$savedUserInfo = apply_filters( 'siwg_saved_google_userinfo', $this->user );
-				update_user_meta ( $validUser->ID, 'siwg_google_userinfo', $savedUserInfo );
-				/* ### example data ###
-					'id' => '110835733123456789123'
-					'email' => 'someone@gmail.com'
-					'verified_email' => true/false
-					'name' => 'John Doe'
-					'given_name' => 'John'
-					'family_name' => 'Doe'
-					'picture' => 'https://lh3.googleusercontent.com/a-/afejHEWUKDWhd283yehdw239872DSYWDGFUDdwfdefw=s96-c'
-					'locale' => 'en'
-				*/
+				update_user_meta ( $validUser->ID, 'siwg_google_userinfo', apply_filters( 'siwg_saved_google_userinfo', $this->user ) );
 			}
 		}
 
-		if ( isset( $state->redirect_to ) && '' !== $state->redirect_to ) {
-			$redirect = $state->redirect_to;
-		} else {
-			$redirect = admin_url(); // Send users to the dashboard by default.
-		}
+		$redirect = !empty($state->my_redirect_uri ) ? $state->my_redirect_uri  : admin_url('profile.php?red999'); // Send users to the dashboard by default.
 
-		if ( !array_key_exists('redirect_after_login_url', $params) ) {
-			$params['redirect_after_login_url'] = $redirect;
-		}
-		if ( $params['redirect_after_login'] ) {
-			wp_redirect( $params['redirect_after_login_url'] ); //phpcs:ignore
+		$redirect_after_login_url = apply_filters( 'siwg_google_redirect_after_login_url', $redirect );
+
+		if ( $redirect_after_login_url ) {
+			wp_redirect( $redirect_after_login_url ); //phpcs:ignore
 			exit;
-		} else {
-			return $params['redirect_after_login_url'];
 		}
-
+		return;
 	}
 
 	/**
@@ -860,7 +841,7 @@ class Sign_In_With_Google_Admin {
 	protected function set_access_token( $code = '' ) {
 
 		if ( ! $code ) {
-			throw new WP_Error( 'No authorization code provided.' );
+			throw new \Exception ( 'No authorization code provided.' );
 		}
 
 		// Sanitize auth code.
@@ -883,10 +864,25 @@ class Sign_In_With_Google_Admin {
 		$response = wp_remote_post( 'https://www.googleapis.com/oauth2/v4/token', $args );
 		
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
+		/*
+		error:
+		  {
+		    public $error => "invalid_grant"
+		  	public $error_description => "Bad Request"
+		  }
+		
+		success:
+		  {
+		    public $access_token =>  "yaG453h..."
+		    public $expires_in   =>  int(3599)
+		    public $scope        => "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
+		    public $token_type   => "Bearer"
+		    public $id_token      => "eyAfd46iOiJSUzI..."
+		  }
+		*/
 
 		if ( isset($body->access_token) && '' !== $body->access_token ) {
-			$this->access_token = $body->access_token;
-			return $this->access_token;
+			return $body->access_token;
 		}
 
 		return false;
@@ -998,15 +994,16 @@ class Sign_In_With_Google_Admin {
 			'role'            => $role,
 		);
 		$user = apply_filters ('siwg_pre_insert_user', $user, $user_data);
-		$new_user = wp_insert_user( $user );
-		do_action ('siwg_after_new_user_insert', $new_user );
+		$new_user_id = wp_insert_user( $user );
+		do_action ('siwg_after_new_user_insert', $new_user_id );
 
-		if ( is_wp_error( $new_user ) ) {
-			do_action ('siwg_new_user_creation_error', $new_user );
-			wp_die( $new_user->get_error_message() . ' <a href="' . wp_login_url() . '">Return to Log In</a>' );
+		if ( is_wp_error( $new_user_id ) ) {
+			do_action ('siwg_new_user_creation_error', $new_user_id );
+			wp_die( $new_user_id->get_error_message() . ' <a href="' . wp_login_url() . '">Return to Log In</a>' );
 			return false;
 		} else {
-			$this->check_and_update_profile_pic ($new_user, $user_data);
+			$this->check_and_update_profile_pic ($new_user_id, $user_data);
+			return get_user_by( 'id', $new_user_id );
 		}
 
 	}
@@ -1054,6 +1051,18 @@ class Sign_In_With_Google_Admin {
 		$result = wp_remote_request( 'https://www.googleapis.com/userinfo/v2/me', $args );
 
 		return json_decode( wp_remote_retrieve_body( $result ) );
+		//
+		// 	{
+		// 		public $id             =>  "12345..."
+		// 		public $email          => "example@gmail.com"
+		// 		public $verified_email => bool(true)
+		// 		public $name           => string(8) "Firstname Lastname"
+		// 		public $given_name     => string(2) "Firstname"
+		// 		public $family_name    => string(5) "Lastname"
+		// 		public $picture        => string(98) "https://lh3.googleusercontent.com/a/xyzxyzxyzxyz=s96-c"
+		// 		public $locale         => string(2) "en"
+		// 	}
+		//
 	}
 
 	/**

@@ -212,18 +212,26 @@ class Sign_In_With_Google_Admin {
 			'siwg_section'
 		);
 
-		add_settings_field(
-			'siwg_save_google_userinfo',
-			__( 'Save user info received from Google', 'sign-in-with-google' ),
-			array( $this, 'siwg_save_google_userinfo' ),
+		add_settings_field( 			
+			'sign_allow_forced_domains_on_disabled_registrations',
+			__( 'Allow domain user registrations', 'sign-in-with-google' ),
+			array( $this, 'sign_allow_forced_domains_on_disabled_registrations' ),
 			'siwg_settings',
 			'siwg_section'
 		);
 
 		add_settings_field( 			
-			'siwg_allow_domain_user_registration',
-			__( 'Allow domain user registrations', 'sign-in-with-google' ),
-			array( $this, 'siwg_allow_domain_user_registration' ),
+			'siwg_allow_registration_even_if_disabled',
+			__( 'Allow registrations even if globally disabled', 'sign-in-with-google' ),
+			array( $this, 'siwg_allow_registration_even_if_disabled' ),
+			'siwg_settings',
+			'siwg_section'
+		);
+
+		add_settings_field(
+			'siwg_save_google_userinfo',
+			__( 'Save user info received from Google', 'sign-in-with-google' ),
+			array( $this, 'siwg_save_google_userinfo' ),
 			'siwg_settings',
 			'siwg_section'
 		);
@@ -283,7 +291,8 @@ class Sign_In_With_Google_Admin {
 		register_setting( 'siwg_settings', 'siwg_google_domain_restriction', array( $this, 'domain_input_validation' ) );
 		register_setting( 'siwg_settings', 'siwg_google_email_sanitization' );
 		register_setting( 'siwg_settings', 'siwg_save_google_userinfo' );
-		register_setting( 'siwg_settings', 'siwg_allow_domain_user_registration' );
+		register_setting( 'siwg_settings', 'sign_allow_forced_domains_on_disabled_registrations' );
+		register_setting( 'siwg_settings', 'siwg_allow_registration_even_if_disabled' );
 		register_setting( 'siwg_settings', 'siwg_show_unlink_in_profile' );
 		register_setting( 'siwg_settings', 'siwg_show_on_login' );
 		register_setting( 'siwg_settings', 'siwg_allow_mail_change' );
@@ -409,13 +418,28 @@ class Sign_In_With_Google_Admin {
 	 *
 	 * @since    [NEXT]
 	 */
-	public function siwg_allow_domain_user_registration() {
+	public function sign_allow_forced_domains_on_disabled_registrations() {
 
 		echo sprintf(
 			'<input type="checkbox" name="%1$s" id="%1$s" value="1" %2$s /><p class="description">%3$s</p>',
-			'siwg_allow_domain_user_registration',
-			checked( get_option( 'siwg_allow_domain_user_registration' ), true, false ),
+			'sign_allow_forced_domains_on_disabled_registrations',
+			checked( get_option( 'sign_allow_forced_domains_on_disabled_registrations' ), true, false ),
 			__( 'If enabled, users with domains in the "Restrict to Domain" field will be allowed to register new user accounts even when new user registrations are disabled.', 'sign-in-with-google' ),
+		);
+	}
+
+	/**
+	 * Callback function for Allow users with the approved domain register accounts
+	 *
+	 * @since    [NEXT]
+	 */
+	public function siwg_allow_registration_even_if_disabled() {
+
+		echo sprintf(
+			'<input type="checkbox" name="%1$s" id="%1$s" value="1" %2$s /><p class="description">%3$s</p>',
+			'siwg_allow_registration_even_if_disabled',
+			checked( get_option( 'siwg_allow_registration_even_if_disabled' ), true, false ),
+			__( 'If registrations are disabled in site settings &gt; general, people will be still regsitered if they successfully login with Google Sign In', 'sign-in-with-google' ),
 		);
 	}
 
@@ -646,7 +670,7 @@ class Sign_In_With_Google_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	public function authenticate_user($code = null, $state = null) {
+	public function authenticate_user($code = null, $state = null, $redirect_after_login = true) {
 
 		$params = [];
 		$params['code'] = $code ?: $_GET['code'];
@@ -685,8 +709,6 @@ class Sign_In_With_Google_Admin {
 				$validUser = $linked_user[0]; 
 			} else {
 
-				$this->check_domain_restriction();
-
 				$result_user = $this->find_by_email_or_create( $this->user );
 
 				if (is_int($result_user)) {
@@ -712,13 +734,12 @@ class Sign_In_With_Google_Admin {
 		$state     = json_decode( base64_decode( $params['state']) );
 
 		$redirect = !empty($state->my_redirect_uri ) ? $state->my_redirect_uri  : admin_url('profile.php?siwg_redirected'); // Send users to the dashboard by default.
-		$redirect = apply_filters( 'siwg_google_redirect_after_login_url', $redirect );
 
-		if ( $redirect ) {
-			wp_redirect( $redirect ); //phpcs:ignore
+		if ($redirect_after_login && !empty($redirect)) {
+			wp_redirect( apply_filters( 'siwg_google_redirect_after_login_url', $redirect ) ); //phpcs:ignore
 			exit;
 		}
-		return ['error'=>null];
+		return ['error'=>null, 'redirecting_to'=>$redirect];
 	}
 
 	/**
@@ -757,7 +778,8 @@ class Sign_In_With_Google_Admin {
 			'siwg_use_google_profile_picture'     => get_option( 'siwg_use_google_profile_picture', true ),
 			'siwg_google_domain_restriction'      => get_option( 'siwg_google_domain_restriction' ),
 			'siwg_google_email_sanitization'      => get_option( 'siwg_google_email_sanitization' ),			
-			'siwg_allow_domain_user_registration' => get_option( 'siwg_allow_domain_user_registration' ),
+			'sign_allow_forced_domains_on_disabled_registrations' => get_option( 'sign_allow_forced_domains_on_disabled_registrations' ),
+			'siwg_allow_registration_even_if_disabled' => get_option( 'siwg_allow_registration_even_if_disabled' ),
 			'siwg_show_unlink_in_profile'         => get_option( 'siwg_show_unlink_in_profile' ),
 			'siwg_show_on_login'                  => get_option( 'siwg_show_on_login' ),
 			'siwg_allow_mail_change'              => get_option( 'siwg_allow_mail_change' ),
@@ -929,26 +951,44 @@ class Sign_In_With_Google_Admin {
 	 */
 	protected function find_by_email_or_create( $user_data ) {
 
-		$user = get_user_by( 'email', $user_data->email );
 		$user_email = $user_data->email;
-		$siwg_google_email_sanitization = (bool) get_option( 'siwg_google_email_sanitization', true );
-		if ($siwg_google_email_sanitization) {
+		if (get_option( 'siwg_google_email_sanitization', true )) {
 			$user_email = Sign_In_With_Google_Utility::sanitize_google_email( $user_email );
 		}
-		$allow_domain_user_registration = (bool) get_option( 'siwg_allow_domain_user_registration' );
-		$allow_user_registration        = (bool) get_option( 'users_can_register' );
+		
+		// The user doesn't have the correct domain, don't authenticate them.
+		$force_domains = array_filter( explode( ', ', get_option( 'siwg_google_domain_restriction' ) ) );
+		$user_domain = explode( '@', $user_email );
 
-		// Redirect the user if registrations are disabled and there is no domain user registration override.
-		$redirect = false === $user && ! $allow_domain_user_registration && ! $allow_user_registration;
-		if ( apply_filters ('siwg_redirect_if_no_registrations', $redirect, $allow_domain_user_registration, $allow_user_registration) ) {
-			wp_redirect( apply_filters( 'siwg_registration_disabled_redirect_link', site_url( 'wp-login.php?registration=disabled' ) ) );
+		$is_forbidden_domain = ! empty($force_domains) && ! in_array( $user_domain[1], $force_domains, true );
+		$is_whitelisted_domain = ! empty($force_domains) && in_array( $user_domain[1], $force_domains, true );
+
+		if ( $is_forbidden_domain ) {
+			wp_redirect( apply_filters( 'siwg_forbidden_registration_redirect', wp_login_url() . '?google_login=incorrect_domain' ) );
 			exit;
 		}
 
-		// allow to be hooked to disallow specific user login/registration (i.e. banned emails)
-		$allow_auth = apply_filters( 'siwg_allow_authorization', true, $user_data, $user, $user_email );
-		if ( ! $allow_auth ) {
-			wp_redirect( apply_filters( 'siwg_disallowed_user_redirect_link', site_url( 'wp-login.php?registration=disabled&userstatus=disallowed' ) ) );
+		$user = get_user_by( 'email', $user_email );
+
+		// Redirect the user if registrations are disabled and there is no domain user registration override.
+		$forbid_registration = 
+			! $user && 
+			(
+				! get_option( 'users_can_register' ) 
+					&& 
+				! get_option( 'siwg_allow_registration_even_if_disabled' ) 
+					&&
+				( ! get_option( 'sign_allow_forced_domains_on_disabled_registrations' ) || ! $is_whitelisted_domain )
+			);
+
+		if ( $forbid_registration ) {
+			wp_redirect( apply_filters( 'siwg_forbidden_registration_redirect', site_url( 'wp-login.php?registration=disabled' ) ) );
+			exit;
+		}
+
+		// hooked to disallow user login/registration (i.e. banned emails) from external codes
+		if ( ! apply_filters( 'siwg_permit_authorization', true, $user_data, $user, $user_email ) ) {
+			wp_redirect( apply_filters( 'siwg_forbidden_registration_redirect', site_url( 'wp-login.php?registration=disabled&userstatus=disallowed' ) ) );
 			exit;
 		}
 	
@@ -1077,23 +1117,6 @@ class Sign_In_With_Google_Admin {
 		//
 	}
 
-	/**
-	 * Checks if the user has the right email domain.
-	 *
-	 * @since 1.2.0
-	 */
-	protected function check_domain_restriction() {
-		// The user doesn't have the correct domain, don't authenticate them.
-		$domains     = array_filter( explode( ', ', get_option( 'siwg_google_domain_restriction' ) ) );
-		$user_domain = explode( '@', $this->user->email );
-
-		if ( ! empty( $domains ) && ! in_array( $user_domain[1], $domains, true ) ) {
-			wp_redirect( wp_login_url() . '?google_login=incorrect_domain' );
-			exit;
-		}
-	}
-
-		
 	/**
 	 * Disable Login page & redirect directly to google login
 	 *

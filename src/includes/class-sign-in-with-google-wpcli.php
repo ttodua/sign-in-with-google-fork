@@ -172,6 +172,20 @@ class Sign_In_With_Google_WPCLI {
 	}
 
 	/**
+	 * Handles updating siwg_allow_registration_even_if_disabled in the options table.
+	 *
+	 * @param string $show Allow registrations even if disabled site-wide
+	 */
+	private function update_siwg_allow_registration_even_if_disabled( $show = 0 ) {
+		$result = update_option( 'siwg_allow_registration_even_if_disabled', boolval( $show ) );
+
+		if ( ! $result ) {
+			WP_CLI::warning( 'Skipping option - Setting already matches' );
+		}
+
+	}
+
+	/**
 	 * Handles updating siwg_google_domain_restriction in the options table.
 	 *
 	 * @param string $domains The string of domains to verify and use.
